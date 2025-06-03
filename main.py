@@ -1,4 +1,4 @@
-from file_reader import reade_file
+from src.utils import clearing_data, greetings
 
 
 def main() -> None:
@@ -6,7 +6,8 @@ def main() -> None:
     Основная функция программы. Отвечает за логику проекта и связывает функциональности между собой.
     :return: None
     """
-    print(reade_file())
+    print(clearing_data())
+    print(greetings())
 
 
 if __name__ == "__main__":
