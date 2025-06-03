@@ -1,14 +1,14 @@
 from typing import Any
 from unittest.mock import patch
 
-import pandas as pd
+from pandas import DataFrame
 from pandas._testing import assert_frame_equal
 
 from src.file_reader import reade_file
 
 
 @patch("pandas.read_excel")
-def test_reade_file(mock_excel: Any, expected_df: pd.DataFrame) -> None:
+def test_reade_file(mock_excel: DataFrame, expected_df: DataFrame) -> None:
     """
     Тестирование функции чтения xlsx-файла
     :param mock_excel: Any

@@ -1,20 +1,20 @@
 from datetime import datetime
-from typing import Any, Union
 
 from pandas import DataFrame
 
 from src import file_reader
 
 
-def clearing_data() -> Union[Any]:
+def clearing_data() -> DataFrame | str:
     """
     Очищает некорректные данные в столбцах 'Номер карты', 'Категория', 'MCC', заменяет отсутствующие данные на 0
-    :param: df pd.DataFrame
-    :return: pd.DataFrame
+    :return: DataFrame
     """
-    df: DataFrame | Union[Any] = file_reader.reade_file()
-    data = df.dropna(subset=["Номер карты", "Категория", "MCC"])
-    return data.fillna(0)
+    df: DataFrame | str = file_reader.reade_file()
+    if isinstance(df, DataFrame):
+        data = df.dropna(subset=["Номер карты", "Категория", "MCC"])
+        return data.fillna(0)
+    return "Неверный формат данных"
 
 
 def greetings() -> str:
