@@ -1,6 +1,8 @@
 import json
 from datetime import datetime
+from typing import Any
 
+import pandas as pd
 from pandas import DataFrame
 
 from src.file_reader import reade_file
@@ -22,19 +24,7 @@ def greetings() -> str:
         greeting = "Доброе утро"
 
     return json.dumps(greeting, ensure_ascii=False)
-
-
-# def format_date_columns() -> DataFrame:
-#     """
-#     Форматирует колонки с датами в DataFrame
-#     :return: DataFrame
-#     """
-#     data = reade_file()
-#     data["Дата операции"] = pd.to_datetime(
-#         data["Дата операции"], format="%d.%m.%Y %H:%M:%S", errors="coerce"
-#     )
-#     data["Дата платежа"] = pd.to_datetime(data["Дата платежа"], format="%d.%m.%Y", errors="coerce")
-#     return data
+    # return greeting
 
 
 def get_cards() -> str:
@@ -44,16 +34,17 @@ def get_cards() -> str:
     """
     data = reade_file()
     if isinstance(data, DataFrame):
-        df = data.loc[(data["Сумма платежа"] < "0") & (data["Номер карты"] != 0) & (data["Статус"] == "OK")]
+        df = data.loc[(data["Сумма платежа"] < 0) & (data["Номер карты"] != 0) & (data["Статус"] == "OK")]
         df_cards = df.groupby("Номер карты", as_index=False)["Сумма платежа"].sum()
         df_cards = df_cards.assign(cashback=round(-df_cards["Сумма платежа"] / 100, 2))
         df_cards = df_cards.rename(columns={"Номер карты": "last_digits", "Сумма платежа": "total_spent"})
     else:
         return ""
-    return json.dumps(df_cards.to_dict(orient="records"), ensure_ascii=False, indent=4)
+    # return json.dumps(df_cards.to_dict(orient="records"), ensure_ascii=False, indent=4)
+    return df_cards.to_dict(orient="records")
 
 
-def top_transactions() -> str:
+def top_transactions() -> str | DataFrame:
     """
     Сортирует транзакции по сумме платежа
     :return: str
@@ -76,4 +67,18 @@ def top_transactions() -> str:
         )
     else:
         return ""
-    return json.dumps(df.to_dict(orient="records"), ensure_ascii=False, indent=4)
+    # return json.dumps(df.to_dict(orient="records"), ensure_ascii=False, indent=4)
+    return df
+
+
+def format_date_columns(data: DataFrame) -> Any:
+    """
+    Форматирует колонку с датами
+    :return: DataFrame
+    """
+    data["Дата операции"] = pd.to_datetime(data["Дата операции"], format="%d.%m.%Y %H:%M:%S", errors="coerce").dt.date
+    # data["Дата операции"] = pd.to_datetime(data["Дата операции"], infer_datetime_format=True, errors="coerce").dt.date
+    return data
+
+
+print(format_date_columns(reade_file()))
