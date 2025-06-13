@@ -4,15 +4,27 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
+import requests
+from dotenv import load_dotenv
 from pandas import DataFrame
 
-from dotenv import load_dotenv
-
+import logger
+from src import file_reader
 from src.file_reader import reade_file
 
-import logger
+logger = logger.get_logger(__name__)
 
-logger = logger.get_logger(__name__)   # 8 продвинутых возможностей модуля logging в Python, которые вы не должны пропустить
+
+def clearing_data() -> DataFrame | str:
+    """
+    Очищает некорректные данные в столбцах 'Номер карты', 'Категория', 'MCC', заменяет отсутствующие данные на 0
+    :return: DataFrame
+    """
+    df: DataFrame | str = file_reader.reade_file()
+    if isinstance(df, DataFrame):
+        data = df.dropna(subset=["Номер карты", "Категория", "MCC"])
+        return data.fillna(0)
+    return "Неверный формат данных"
 
 
 def greetings() -> str:
@@ -88,49 +100,52 @@ def format_date_columns(data: DataFrame) -> Any:
     return data
 
 
-print(format_date_columns(reade_file()))
-
-# Загрузка переменных из .env-файла
-# load_dotenv()
-
-# Получение значения переменной API_KEY из .env-файла
-# api_key = os.getenv("API_KEY")
-
-# elif currency in ["USD", "EUR"]:
-# url = "https://api.apilayer.com/exchangerates_data/convert"
-# payload = {"amount": amount, "from": currency, "to": "RUB"}
-# headers = {"apikey": api_key}
-# try:
-#     response = requests.request("GET", url, headers=headers, params=payload, timeout=50)
-#     response.raise_for_status()
-#     result = response.json()
-# except requests.exceptions.RequestException as e:
-#     return f"Error: {e}"
-# else:
-#     return result.get("result")
+def reade_json_file() -> list[Any] | Any:
+    """
+    Чтение json-файла user_settings
+    :return: list[Any] | Any
+    """
+    logger.info("Чтение json-файла user_settings")
+    try:
+        with open("user_settings.json", encoding="utf-8") as f:
+            user_list = json.load(f)
+            return user_list
+    except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
+        logger.error(f"{e}")
+        return []
 
 
-# def get_currency_rates() -> list|str:
-#     # logger.info("Начало работы функции по получению курсов валют")
-#     with open(settings, "r", encoding="utf-8") as file:
-#         currency_list = json.load(file)["user_currencies"]
-#         currency_rates = []
-#     for currency in currency_list:
-#         params = {"amount": 1, "to": "RUB", "from": currency}
-#         headers = {"apikey": api_token}
-#         try:
-#             response: Any = requests.get(api_url, headers=headers, params=params, timeout=50)
-#             status = response.raise_for_status()
-#             # logger.info(f"Попытка соединения с сервером, {status}")
-#         except requests.exceptions.RequestException as e:
-#             logger.error(f"Ошибка обращения к api {e}")
-#             return "Ошибка обращения к api"
-#         else:
-#             temp = {"currency": currency, "rate": round(response.json().get("info").get("rate"), 2)}
-#             currency_rates.append(temp)
-#             # logger.info("Успешное получение данных о курсе валют и формирование корректного JSON-ответа")
-#     return currency_rates
-#
+def get_currency_rates() -> str | list[Any]:
+    """
+    Получение курсов валют
+    :return: list|str
+    """
+    logger.info("Начало работы функции по получению курсов валют")
+    # Загрузка переменных из .env-файла
+    load_dotenv()
+
+    # Получение значения переменной API_KEY из .env-файла
+    api_key = os.getenv("API_KEY")
+
+    url = "https://api.apilayer.com/exchangerates_data/convert"
+
+    user_settings = reade_json_file()["user_currencies"]
+    currency_rates = []
+    for currency in user_settings:
+        params = {"amount": 1, "to": "RUB", "from": currency}
+        headers = {"apikey": api_key}
+        try:
+            response = requests.request("GET", url, headers=headers, params=params, timeout=50)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            return f"Error: {e}"
+        else:
+            currency_rates.append({"currency": currency, "rate": round(response.json().get("info").get("rate"), 2)})
+    return currency_rates
+
+
+print(get_currency_rates())
+
 # def get_stock_rates() -> list:
 #     # logger.info("Начало работы функции по получению данных о котировках акций")
 #     with open(settings, "r", encoding="utf-8") as file:
@@ -141,4 +156,3 @@ print(format_date_columns(reade_file()))
 #         stock.append(temp)
 #         # logger.info("Успешное получение данных о котировках акций и формирование корректного JSON-ответа")
 #     return stock
-
