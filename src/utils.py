@@ -11,6 +11,7 @@ from pandas import DataFrame
 import logger
 from src import file_reader
 from src.file_reader import reade_file
+import yfinance as yf
 
 logger = logger.get_logger(__name__)
 
@@ -117,10 +118,10 @@ def reade_json_file() -> list[Any] | Any:
 
 def get_currency_rates() -> str | list[Any]:
     """
-    Получение курсов валют
+    Получение курса валют
     :return: list|str
     """
-    logger.info("Начало работы функции по получению курсов валют")
+    logger.info("Получение курса валют")
     # Загрузка переменных из .env-файла
     load_dotenv()
 
@@ -144,15 +145,11 @@ def get_currency_rates() -> str | list[Any]:
     return currency_rates
 
 
-print(get_currency_rates())
-
-# def get_stock_rates() -> list:
-#     # logger.info("Начало работы функции по получению данных о котировках акций")
-#     with open(settings, "r", encoding="utf-8") as file:
-#         ticker_list = json.load(file)["user_stocks"]
-#     stock = []
-#     for ticker in ticker_list:
-#         temp = {"stock": ticker, "price": yf.Ticker(ticker).info["currentPrice"]}
-#         stock.append(temp)
-#         # logger.info("Успешное получение данных о котировках акций и формирование корректного JSON-ответа")
-#     return stock
+def get_stock_rates() -> list:
+    logger.info("Получению данных о котировках акций")
+    user_stocks = reade_json_file()["user_stocks"]
+    stocks = []
+    for ticker in user_stocks:
+        stocks.append({"stock": ticker, "price": yf.Ticker(ticker).info["currentPrice"]})
+    logger.info("Успешное получение данных о котировках акций и формирование корректного JSON-ответа")
+    return stocks

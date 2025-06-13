@@ -6,7 +6,7 @@ def main() -> None:
     Основная функция программы. Отвечает за логику проекта и связывает функциональности между собой.
     :return: None
     """
-    print(clearing_data())
+    clearing_data().info()
     print(greetings())
 
 
