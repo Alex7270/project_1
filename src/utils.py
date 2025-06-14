@@ -38,7 +38,7 @@ def format_date_columns() -> DataFrame:
     Форматирует колонку с датами
     :return: DataFrame
     """
-    data = reade_file()
+    data: DataFrame = reade_file()
     data["Дата операции"] = pd.to_datetime(data["Дата операции"], format="%d.%m.%Y %H:%M:%S", errors="coerce")
     return data
 
@@ -55,7 +55,7 @@ def filters_by_date(date: str) -> DataFrame:
     return df_filtered
 
 
-def get_cards(data: DataFrame) -> str:
+def get_cards(data: DataFrame) -> Any:
     """
     Группирует расходы по номерам карт
     :return: DataFrame
@@ -100,7 +100,7 @@ def top_transactions(data: DataFrame) -> str | list[dict[Hashable, Any]]:
     return df.to_dict(orient="records")
 
 
-def reade_json_file() -> dict[str, Any]:
+def reade_json_file() -> dict[str, Any] | Any:
     """
     Чтение json-файла user_settings
     :return: list[Any] | Any

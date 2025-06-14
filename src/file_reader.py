@@ -1,7 +1,5 @@
 import pandas as pd
 
-import logger
-
 
 def reade_file(filepath: str = "data/operations.xlsx") -> pd.DataFrame | str | None:
     """
@@ -12,8 +10,11 @@ def reade_file(filepath: str = "data/operations.xlsx") -> pd.DataFrame | str | N
     try:
         df = pd.read_excel(filepath)
         if df.empty:
-            return "Файл пустой"
+            # return "Файл пустой"
+            print("Файл пустой")
         return df.fillna(0)
 
     except Exception as e:
-        return f"Error: {e}"
+        # return f"Error: {e}"
+        print(f"Error: {e}")
+    return None
