@@ -1,31 +1,18 @@
 import json
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Hashable
 
 import pandas as pd
 import requests
+import yfinance as yf
 from dotenv import load_dotenv
 from pandas import DataFrame
 
 import logger
-from src import file_reader
 from src.file_reader import reade_file
-import yfinance as yf
 
 logger = logger.get_logger(__name__)
-
-
-def clearing_data() -> DataFrame | str:
-    """
-    Очищает некорректные данные в столбцах 'Номер карты', 'Категория', 'MCC', заменяет отсутствующие данные на 0
-    :return: DataFrame
-    """
-    df: DataFrame | str = file_reader.reade_file()
-    if isinstance(df, DataFrame):
-        data = df.dropna(subset=["Номер карты", "Категория", "MCC"])
-        return data.fillna(0)
-    return "Неверный формат данных"
 
 
 def greetings() -> str:
@@ -43,16 +30,36 @@ def greetings() -> str:
     else:
         greeting = "Доброе утро"
 
-    return json.dumps(greeting, ensure_ascii=False)
-    # return greeting
+    return greeting
 
 
-def get_cards() -> str:
+def format_date_columns() -> DataFrame:
+    """
+    Форматирует колонку с датами
+    :return: DataFrame
+    """
+    data = reade_file()
+    data["Дата операции"] = pd.to_datetime(data["Дата операции"], format="%d.%m.%Y %H:%M:%S", errors="coerce")
+    return data
+
+
+def filters_by_date(date: str) -> DataFrame:
+    """
+    Фильтрует транзакции по дате
+    :return: DataFrame
+    """
+    df = format_date_columns()
+    end_date = pd.to_datetime(date)
+    start_date = end_date.replace(day=1)
+    df_filtered = df[df["Дата операции"].between(start_date, end_date, inclusive="both")]
+    return df_filtered
+
+
+def get_cards(data: DataFrame) -> str:
     """
     Группирует расходы по номерам карт
     :return: DataFrame
     """
-    data = reade_file()
     if isinstance(data, DataFrame):
         df = data.loc[(data["Сумма платежа"] < 0) & (data["Номер карты"] != 0) & (data["Статус"] == "OK")]
         df_cards = df.groupby("Номер карты", as_index=False)["Сумма платежа"].sum()
@@ -60,16 +67,18 @@ def get_cards() -> str:
         df_cards = df_cards.rename(columns={"Номер карты": "last_digits", "Сумма платежа": "total_spent"})
     else:
         return ""
-    # return json.dumps(df_cards.to_dict(orient="records"), ensure_ascii=False, indent=4)
+
     return df_cards.to_dict(orient="records")
 
 
-def top_transactions() -> str | DataFrame:
+def top_transactions(data: DataFrame) -> str | list[dict[Hashable, Any]]:
     """
     Сортирует транзакции по сумме платежа
     :return: str
     """
-    data = reade_file()
+    # Преобразование даты в строку для корректной
+    data["Дата операции"] = data["Дата операции"].dt.strftime("%d.%m.%Y")
+
     if isinstance(data, DataFrame):
         df = (
             data.loc[data["Статус"] == "OK"]
@@ -87,21 +96,11 @@ def top_transactions() -> str | DataFrame:
         )
     else:
         return ""
-    # return json.dumps(df.to_dict(orient="records"), ensure_ascii=False, indent=4)
-    return df
+
+    return df.to_dict(orient="records")
 
 
-def format_date_columns(data: DataFrame) -> Any:
-    """
-    Форматирует колонку с датами
-    :return: DataFrame
-    """
-    data["Дата операции"] = pd.to_datetime(data["Дата операции"], format="%d.%m.%Y %H:%M:%S", errors="coerce").dt.date
-    # data["Дата операции"] = pd.to_datetime(data["Дата операции"], infer_datetime_format=True, errors="coerce").dt.date
-    return data
-
-
-def reade_json_file() -> list[Any] | Any:
+def reade_json_file() -> dict[str, Any]:
     """
     Чтение json-файла user_settings
     :return: list[Any] | Any
@@ -109,14 +108,14 @@ def reade_json_file() -> list[Any] | Any:
     logger.info("Чтение json-файла user_settings")
     try:
         with open("user_settings.json", encoding="utf-8") as f:
-            user_list = json.load(f)
-            return user_list
+            user_dict = json.load(f)
+            return user_dict
     except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
         logger.error(f"{e}")
-        return []
+        return {}
 
 
-def get_currency_rates() -> str | list[Any]:
+def get_currency_rates() -> list[Any]:
     """
     Получение курса валют
     :return: list|str
@@ -139,17 +138,17 @@ def get_currency_rates() -> str | list[Any]:
             response = requests.request("GET", url, headers=headers, params=params, timeout=50)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            return f"Error: {e}"
+            logger.error(f"Error: {e}")
         else:
             currency_rates.append({"currency": currency, "rate": round(response.json().get("info").get("rate"), 2)})
     return currency_rates
 
 
-def get_stock_rates() -> list:
-    logger.info("Получению данных о котировках акций")
+def get_stock_rates() -> Any:
+    logger.info("Получение данных о котировках акций")
     user_stocks = reade_json_file()["user_stocks"]
     stocks = []
     for ticker in user_stocks:
         stocks.append({"stock": ticker, "price": yf.Ticker(ticker).info["currentPrice"]})
-    logger.info("Успешное получение данных о котировках акций и формирование корректного JSON-ответа")
+    logger.info("Данные о котировках акций получены")
     return stocks
