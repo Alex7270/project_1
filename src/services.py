@@ -6,8 +6,8 @@ import logger
 logger_ = logger.get_logger(__name__)
 
 
-print(hasattr(logger, 'info'))
-print(hasattr(logger, 'error'))
+print(hasattr(logger, "info"))
+print(hasattr(logger, "error"))
 #
 # Преобразование в список словарей
 # df = reade_file().to_dict(orient="records")

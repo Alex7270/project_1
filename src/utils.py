@@ -100,7 +100,7 @@ def top_transactions(data: DataFrame) -> str | list[dict[Hashable, Any]]:
     return df.to_dict(orient="records")
 
 
-def reade_json_file() -> dict[str, Any]:
+def reade_json_file() -> Any:
     """
     Чтение json-файла user_settings
     :return: list[Any] | Any
