@@ -12,7 +12,7 @@ from pandas import DataFrame
 import logger
 from src.file_reader import reade_file
 
-logger = logger.get_logger(__name__)
+logger_ = logger.get_logger(__name__)
 
 
 def greetings() -> str:
@@ -20,6 +20,7 @@ def greetings() -> str:
     Приветствует в зависимости от времени суток
     :return: str
     """
+    logger_.info("Приветствие")
     hour_now = datetime.now().hour
     if 23 <= hour_now < 24 or 0 <= hour_now <= 5:
         greeting = "Доброй ночи"
@@ -29,7 +30,6 @@ def greetings() -> str:
         greeting = "Добрый день"
     else:
         greeting = "Доброе утро"
-
     return greeting
 
 
@@ -38,7 +38,7 @@ def format_date_columns() -> DataFrame:
     Форматирует колонку с датами
     :return: DataFrame
     """
-    data = reade_file()
+    data: DataFrame = reade_file()
     data["Дата операции"] = pd.to_datetime(data["Дата операции"], format="%d.%m.%Y %H:%M:%S", errors="coerce")
     return data
 
@@ -55,7 +55,7 @@ def filters_by_date(date: str) -> DataFrame:
     return df_filtered
 
 
-def get_cards(data: DataFrame) -> str:
+def get_cards(data: DataFrame) -> Any:
     """
     Группирует расходы по номерам карт
     :return: DataFrame
@@ -105,13 +105,13 @@ def reade_json_file() -> dict[str, Any]:
     Чтение json-файла user_settings
     :return: list[Any] | Any
     """
-    logger.info("Чтение json-файла user_settings")
+    logger_.info("Чтение json-файла user_settings")
     try:
         with open("user_settings.json", encoding="utf-8") as f:
             user_dict = json.load(f)
             return user_dict
     except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
-        logger.error(f"{e}")
+        logger_.error(f"{e}")
         return {}
 
 
@@ -120,7 +120,7 @@ def get_currency_rates() -> list[Any]:
     Получение курса валют
     :return: list|str
     """
-    logger.info("Получение курса валют")
+    logger_.info("Получение курса валют")
     # Загрузка переменных из .env-файла
     load_dotenv()
 
@@ -138,17 +138,17 @@ def get_currency_rates() -> list[Any]:
             response = requests.request("GET", url, headers=headers, params=params, timeout=50)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error: {e}")
+            logger_.error(f"Error: {e}")
         else:
             currency_rates.append({"currency": currency, "rate": round(response.json().get("info").get("rate"), 2)})
     return currency_rates
 
 
 def get_stock_rates() -> Any:
-    logger.info("Получение данных о котировках акций")
+    logger_.info("Получение данных о котировках акций")
     user_stocks = reade_json_file()["user_stocks"]
     stocks = []
     for ticker in user_stocks:
         stocks.append({"stock": ticker, "price": yf.Ticker(ticker).info["currentPrice"]})
-    logger.info("Данные о котировках акций получены")
+    logger_.info("Данные о котировках акций получены")
     return stocks

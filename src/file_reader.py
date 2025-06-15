@@ -2,6 +2,8 @@ import pandas as pd
 
 import logger
 
+logger_ = logger.get_logger(__name__)
+
 
 def reade_file(filepath: str = "data/operations.xlsx") -> pd.DataFrame | str | None:
     """
@@ -9,6 +11,7 @@ def reade_file(filepath: str = "data/operations.xlsx") -> pd.DataFrame | str | N
     :param filepath: str
     :return: pd.DataFrame | str
     """
+    logger_.info("Чтение xlsx-файла")
     try:
         df = pd.read_excel(filepath)
         if df.empty:
@@ -16,4 +19,5 @@ def reade_file(filepath: str = "data/operations.xlsx") -> pd.DataFrame | str | N
         return df.fillna(0)
 
     except Exception as e:
+        logger_.error(f"Error: {e}")
         return f"Error: {e}"
