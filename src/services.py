@@ -1,10 +1,8 @@
 import json
-import re
 from typing import Any
 
 import logger
 
-logger = logger.get_logger(__name__)
 
 
 def filter_transactions(transactions: list[dict[str, Any]], search: str) -> str:
@@ -14,14 +12,13 @@ def filter_transactions(transactions: list[dict[str, Any]], search: str) -> str:
     :param search: str
     :return: str
     """
-    logger.info("Начало работы функции filter_transactions")
+    logger_.info("Начало работы функции фильтрации")
 
-    new_lst = []
+    new_list = []
     for transaction in transactions:
-        for i, value in transaction.items():
-            if re.search(search, str(value), re.I):
-                new_lst.append(transaction)
+        if search in [transaction.get("Категория", ""), transaction.get("Описание", "")]:
+            new_list.append(transaction)
 
-    logger.info(f"Транзакции отфильтрованы по запросу: {search}")
+    logger_.info(f'Транзакции отфильтрованы по ключевому слову: "{search}"')
 
-    return json.dumps(new_lst, ensure_ascii=False, indent=4)
+    return json.dumps(new_list, indent=4, ensure_ascii=False)
