@@ -3,6 +3,7 @@ from typing import Any
 
 import logger
 
+logger_ = logger.get_logger(__name__)
 
 
 def filter_transactions(transactions: list[dict[str, Any]], search: str) -> str:
