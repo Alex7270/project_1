@@ -5,10 +5,10 @@ import logger
 
 logger_ = logger.get_logger(__name__)
 
+# Проверяем существует ли атрибуты "info" и "error" в модуле logger_
+# print(hasattr(logger_, "info"))
+# print(hasattr(logger_, "error"))
 
-print(hasattr(logger, "info"))
-print(hasattr(logger, "error"))
-#
 # Преобразование в список словарей
 # df = reade_file().to_dict(orient="records")
 
