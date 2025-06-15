@@ -21,9 +21,7 @@ def filter_transactions(transactions: list[dict[str, Any]], search: str) -> str:
 
     new_list = []
     for transaction in transactions:
-        if transaction.get('Категория', "") == search:
-            new_list.append(transaction)
-        elif transaction.get('Описание', "") == search:
+        if search in [transaction.get('Категория', ""), transaction.get('Описание', "")]:
             new_list.append(transaction)
 
     logger.info(f'Транзакции отфильтрованы по ключевому слову: "{search}"')
